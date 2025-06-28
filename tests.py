@@ -1,81 +1,134 @@
-from conftest import *
+import pytest
 from main import BooksCollector
 
+fantasy_genre_book = 'Армагеддон на минималках'
+horror_genre_book = 'Оно смотрит из подвала'
+detective_genre_book = 'Инспектор Пельмень'
+child_genre_book = 'Приключения Пятачка и огурца'
+comedy_genre_book = 'Как выжить на семейном ужине'
 
-# класс TestBooksCollector объединяет набор тестов, которыми мы покрываем наше приложение BooksCollector
-# обязательно указывать префикс Test
+
 class TestBooksCollector:
 
-    def test_add_new_book_add_one_book(self, collector):
+    def test_add_new_book_adds_book(self, collector):
         collector.add_new_book(horror_genre_book)
 
-        assert len(collector.get_books_genre()) == 1
+        assert horror_genre_book in collector.books_genre
+        assert len(collector.books_genre) == 1
 
-    def test_add_new_book_add_book_more_then_40_symbols(self, collector):
+    def test_add_new_book_does_not_add_book_with_name_over_40_chars(self, collector):
         name = 'string more then 40 symbols string more then 40 symbols'
         collector.add_new_book(name)
 
-        assert len(collector.get_books_genre()) == 0
+        assert name not in collector.books_genre
+        assert len(collector.books_genre) == 0
 
-    def test_add_new_book_add_book_with_0_symbols(self, collector):
+    def test_add_new_book_does_not_add_book_with_empty_name(self, collector):
         name = ''
         collector.add_new_book(name)
 
-        assert len(collector.get_books_genre()) == 0
+        assert name not in collector.books_genre
+        assert len(collector.books_genre) == 0
 
-    def test_add_new_book_add_two_similar_books(self, collector):
+    def test_add_new_book_does_not_add_duplicate_books(self, collector):
         collector.add_new_book(comedy_genre_book)
         collector.add_new_book(comedy_genre_book)
 
-        assert len(collector.get_books_genre()) == 1
+        assert len(collector.books_genre) == 1
 
-    def test_add_new_book_without_genre(self, collector):
+    def test_set_book_genre_sets_genre(self, collector):
         collector.add_new_book(horror_genre_book)
+        collector.set_book_genre(horror_genre_book, 'Ужасы')
 
-        assert collector.get_books_genre().get(horror_genre_book) == ''
+        assert collector.books_genre[horror_genre_book] == 'Ужасы'
 
-    def test_set_book_genre_set_genre(self, books_collector):
-        assert books_collector.get_book_genre(horror_genre_book) == 'Ужасы'
+    def test_get_book_genre_returns_genre(self, collector):
+        collector.books_genre[detective_genre_book] = 'Детективы'
 
-    def test_get_books_with_specific_genre_one_book_get_list_genre(self, books_collector):
-        genre = 'Детективы'
+        assert collector.get_book_genre(detective_genre_book) == 'Детективы'
 
-        assert books_collector.get_books_with_specific_genre(genre) == [detective_genre_book]
+    def test_get_books_with_specific_genre_returns_correct_books(self, collector):
+        collector.books_genre[detective_genre_book] = 'Детективы'
+        collector.books_genre[fantasy_genre_book] = 'Фантастика'
 
-    def test_get_books_for_children_get_list_book(self, books_collector):
-        assert books_collector.get_books_for_children() == [fantasy_genre_book, child_genre_book, comedy_genre_book]
+        result = collector.get_books_with_specific_genre('Детективы')
+        assert result == [detective_genre_book]
+
+    def test_get_books_genre_returns_correct_dictionary(self, collector):
+        collector.add_new_book(fantasy_genre_book)
+        collector.set_book_genre(fantasy_genre_book, 'Фантастика')
+
+        collector.add_new_book(child_genre_book)
+        collector.set_book_genre(child_genre_book, 'Мультфильмы')
+
+        expected_result = {
+            fantasy_genre_book: 'Фантастика',
+            child_genre_book: 'Мультфильмы',
+        }
+
+        assert collector.get_books_genre() == expected_result
+
+    def test_get_books_for_children_excludes_adult_books(self, collector):
+        collector.books_genre[fantasy_genre_book] = 'Фантастика'
+        collector.books_genre[child_genre_book] = 'Мультфильмы'
+        collector.books_genre[comedy_genre_book] = 'Комедии'
+        collector.books_genre[horror_genre_book] = 'Ужасы'
+
+        result = collector.get_books_for_children()
+        assert horror_genre_book not in result
+        assert sorted(result) == sorted([fantasy_genre_book, child_genre_book, comedy_genre_book])
 
     @pytest.mark.parametrize(
-        'book, expected_result',
+        'book, genre, expected_result',
         [
-            (fantasy_genre_book, True),
-            (horror_genre_book, False),
-            (detective_genre_book, True),
-            (child_genre_book, True),
-            (comedy_genre_book, True),
+            (fantasy_genre_book, 'Фантастика', True),
+            (horror_genre_book, 'Ужасы', False),
+            (detective_genre_book, 'Детективы', False),
+            (child_genre_book, 'Мультфильмы', True),
+            (comedy_genre_book, 'Комедии', True),
         ]
     )
-    def test_get_books_for_children_adult_books_not_included_the_list(self, collector, books_collector, book, expected_result):
-        children_books = collector.get_books_for_children()
-        assert (book in children_books) == expected_result
+    def test_get_books_for_children_parametrized(self, collector, book, genre, expected_result):
+        collector.books_genre[book] = genre
 
-    def test_add_book_in_favorites_add_one_book(self, collector, books_collector):
+        result = collector.get_books_for_children()
+        assert (book in result) == expected_result
+
+    def test_add_book_in_favorites_adds_book(self, collector):
+        collector.books_genre[fantasy_genre_book] = 'Фантастика'
         collector.add_book_in_favorites(fantasy_genre_book)
-        assert collector.get_list_of_favorites_books() == [fantasy_genre_book]
 
-    def test_add_book_in_favorites_similar_books(self, collector, books_collector):
+        assert collector.favorites == [fantasy_genre_book]
+
+    def test_add_book_in_favorites_does_not_add_duplicate(self, collector):
+        collector.books_genre[horror_genre_book] = 'Ужасы'
         collector.add_book_in_favorites(horror_genre_book)
         collector.add_book_in_favorites(horror_genre_book)
 
-        assert len(collector.get_list_of_favorites_books()) == 1
+        assert collector.favorites == [horror_genre_book]
 
-    def test_add_to_favorites_unlisted_books(self, collector):
-        collector.add_book_in_favorites('Книга не из списка')
+    def test_add_book_in_favorites_ignores_unknown_book(self, collector):
+        collector.add_book_in_favorites('Несуществующая книга')
 
-        assert len(collector.get_list_of_favorites_books()) == 0
+        assert collector.favorites == []
 
-    def test_delete_book_from_favorites_removes_book(self, collector, books_collector):
+    def test_delete_book_from_favorites_removes_book(self, collector):
+        collector.books_genre[fantasy_genre_book] = 'Фантастика'
         collector.add_book_in_favorites(fantasy_genre_book)
+
         collector.delete_book_from_favorites(fantasy_genre_book)
 
-        assert len(collector.get_list_of_favorites_books()) == 0
+        assert collector.favorites == []
+
+    def test_get_list_of_favorites_books_returns_correct_list(self, collector):
+        collector.add_new_book(fantasy_genre_book)
+        collector.set_book_genre(fantasy_genre_book, 'Фантастика')
+        collector.add_new_book(child_genre_book)
+        collector.set_book_genre(child_genre_book, 'Мультфильмы')
+
+        collector.add_book_in_favorites(fantasy_genre_book)
+        collector.add_book_in_favorites(child_genre_book)
+
+        expected_result = [fantasy_genre_book, child_genre_book]
+
+        assert collector.get_list_of_favorites_books() == expected_result
