@@ -1,1 +1,14 @@
-# qa_python
+# Реализованы следующие тесты:
+1. Успешное добавление одной книги (test_add_new_book_add_one_book)
+2. Невозможность добавления книги более 40 символов (test_add_new_book_add_book_more_then_40_symbols)
+3. Невозможность добавления книги без символов (test_add_new_book_add_book_with_0_symbols)
+4. Невозможность добавления двух одинаковых книг (test_add_new_book_add_two_similar_books)
+5. Успешное добавление книги без жанра (test_add_new_book_without_genre)
+6. Успешное добавление жанра книге (test_set_book_genre_set_genre)
+7. Успешное получение книги с определенным жанром (test_get_books_with_specific_genre_one_book_get_list_genre)
+8. Получение списка книг, подходящих для детей(test_get_books_for_children_get_list_book)
+9. Параметризированый тест. Получение списка книг, подходящих для детей (test_get_books_for_children_adult_books_not_included_the_list)
+10. Успешное добавление одной книги в избранное (test_add_book_in_favorites_add_one_book)
+11. Невозможность добавление двух одинаковых книг в избранное (test_add_book_in_favorites_similar_books)
+12. Невозможность добавить книгу не из списка в избранное (test_add_to_favorites_unlisted_books)
+13. Успешное удаление книги из избранного (test_delete_book_from_favorites_removes_book)
